@@ -4,7 +4,7 @@ use Moo;
 use Dancer2::Core::Types;
 use JSON;
 
-our $VERSION = '0.005';
+our $VERSION = '0.006';
 
 =head1 NAME
 
@@ -12,7 +12,7 @@ Dancer2::Session::DBIC - DBIx::Class session engine for Dancer2
 
 =head1 VERSION
 
-0.005
+0.006
 
 =head1 DESCRIPTION
 
@@ -51,6 +51,7 @@ use strict;
 use DBIx::Class;
 use Try::Tiny;
 use Scalar::Util qw(blessed);
+use Class::Load qw( try_load_class );
 
 with 'Dancer2::Core::Role::SessionFactory';
 
@@ -286,14 +287,13 @@ sub _load_schema_class {
 
     if ($schema_class) {
         $schema_class =~ s/-/::/g;
-        eval { load $schema_class };
-        die "Could not load schema_class $schema_class: $@" if $@;
+        my ($ok,$err) = try_load_class($schema_class);
+        die "Could not load schema_class $schema_class: $err" unless $ok;
         $schema_object = $schema_class->connect(@conn_info);
     } else {
         my $dbic_loader = 'DBIx::Class::Schema::Loader';
-        eval { load $dbic_loader };
-        die "You must provide a schema_class option or install $dbic_loader."
-            if $@;
+        my ($ok,$err) = try_load_class($dbic_loader);
+        die "You must provide a schema_class option or install $dbic_loader." unless $ok;
         $dbic_loader->naming('v7');
         $schema_object = DBIx::Class::Schema::Loader->connect(@conn_info);
     }
