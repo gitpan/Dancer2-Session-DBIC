@@ -4,7 +4,7 @@ use Moo;
 use Dancer2::Core::Types;
 use JSON;
 
-our $VERSION = '0.006';
+our $VERSION = '0.007';
 
 =head1 NAME
 
@@ -12,7 +12,7 @@ Dancer2::Session::DBIC - DBIx::Class session engine for Dancer2
 
 =head1 VERSION
 
-0.006
+0.007
 
 =head1 DESCRIPTION
 
@@ -208,15 +208,18 @@ Remove the current session object from the database.
 
 =cut
 
-sub _destroy {
-    my $self = shift;
+# as per doc: The _destroy method must be implemented. It must take
+# $id as a single argument and destroy the underlying data.
 
-    if (!defined $self->id) {
+sub _destroy {
+    my ($self, $id) = @_;
+
+    if (!defined $id) {
         die "No session ID passed to destroy method";
         return;
     }
 
-    $self->_rset->find($self->id)->delete;
+    $self->_rset->find($id)->delete;
 }
 
 # Creates and connects schema
